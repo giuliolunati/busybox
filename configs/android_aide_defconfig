@@ -65,7 +65,7 @@ CONFIG_CROSS_COMPILER_PREFIX="/data/data/com.aide.ui/files/ndksupport-20150601/a
 CONFIG_SYSROOT="/data/data/com.aide.ui/files/ndksupport-20150601/android-ndk-aide/platforms/android-9/arch-arm"
 CONFIG_EXTRA_CFLAGS="-DANDROID -D__ANDROID__ -DSK_RELEASE -nostdlib -march=armv7-a -msoft-float -mfloat-abi=softfp -mfpu=neon -mthumb -mthumb-interwork -fpic -fno-short-enums -fgcse-after-reload -frename-registers"
 CONFIG_EXTRA_LDFLAGS="-Xlinker -z -Xlinker muldefs -nostdlib -Bdynamic -Xlinker -dynamic-linker -Xlinker /system/bin/linker -Xlinker -z -Xlinker nocopyreloc -Xlinker --no-undefined ${SYSROOT}/usr/lib/crtbegin_dynamic.o ${SYSROOT}/usr/lib/crtend_android.o"
-# CONFIG_EXTRA_LDLIBS="dl m c gcc"
+CONFIG_EXTRA_LDLIBS="dl m c gcc"
 
 #
 # Debugging Options
