@@ -79,13 +79,6 @@ struct globals {
 	count = -1; \
 } while (0)
 
-// If GNUisms are not available...
-//static void *mempcpy(void *_dst, const void *_src, int n)
-//{
-//	memcpy(_dst, _src, n);
-//	return (char*)_dst + n;
-//}
-
 static int send_pack(struct in_addr *src_addr,
 			struct in_addr *dst_addr, struct sockaddr_ll *ME,
 			struct sockaddr_ll *HE)
