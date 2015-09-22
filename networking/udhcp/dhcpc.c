@@ -849,10 +849,13 @@ static NOINLINE int udhcp_recv_raw_packet(struct dhcp_packet *dhcp_pkt, int fd)
 	int bytes;
 	struct ip_udp_dhcp_packet packet;
 	uint16_t check;
-	unsigned char cmsgbuf[CMSG_LEN(sizeof(struct tpacket_auxdata))];
 	struct iovec iov;
 	struct msghdr msg;
+
+#ifdef PACKET_AUXDATA
+	unsigned char cmsgbuf[CMSG_LEN(sizeof(struct tpacket_auxdata))];
 	struct cmsghdr *cmsg;
+#endif
 
 	/* used to use just safe_read(fd, &packet, sizeof(packet))
 	 * but we need to check for TP_STATUS_CSUMNOTREADY :(
@@ -862,8 +865,12 @@ static NOINLINE int udhcp_recv_raw_packet(struct dhcp_packet *dhcp_pkt, int fd)
 	memset(&msg, 0, sizeof(msg));
 	msg.msg_iov = &iov;
 	msg.msg_iovlen = 1;
+
+#ifdef PACKET_AUXDATA
 	msg.msg_control = cmsgbuf;
 	msg.msg_controllen = sizeof(cmsgbuf);
+#endif
+
 	for (;;) {
 		bytes = recvmsg(fd, &msg, 0);
 		if (bytes < 0) {
@@ -910,6 +917,7 @@ static NOINLINE int udhcp_recv_raw_packet(struct dhcp_packet *dhcp_pkt, int fd)
 		return -2;
 	}
 
+#ifdef PACKET_AUXDATA
 	for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
 		if (cmsg->cmsg_level == SOL_PACKET
 		 && cmsg->cmsg_type == PACKET_AUXDATA
@@ -923,6 +931,7 @@ static NOINLINE int udhcp_recv_raw_packet(struct dhcp_packet *dhcp_pkt, int fd)
 				goto skip_udp_sum_check;
 		}
 	}
+#endif
 
 	/* verify UDP checksum. IP header has to be modified for this */
 	memset(&packet.ip, 0, offsetof(struct iphdr, protocol));
@@ -934,7 +943,10 @@ static NOINLINE int udhcp_recv_raw_packet(struct dhcp_packet *dhcp_pkt, int fd)
 		log1("Packet with bad UDP checksum received, ignoring");
 		return -2;
 	}
+
+#ifdef PACKET_AUXDATA
  skip_udp_sum_check:
+#endif
 
 	if (packet.data.cookie != htonl(DHCP_MAGIC)) {
 		bb_info_msg("Packet with bad magic, ignoring");
@@ -1047,12 +1059,14 @@ static int udhcp_raw_socket(int ifindex)
 	}
 #endif
 
+#ifdef PACKET_AUXDATA
 	if (setsockopt(fd, SOL_PACKET, PACKET_AUXDATA,
 			&const_int_1, sizeof(int)) < 0
 	) {
 		if (errno != ENOPROTOOPT)
 			log1("Can't set PACKET_AUXDATA on raw socket");
 	}
+#endif
 
 	log1("Created raw socket");
 
